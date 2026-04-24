@@ -17,3 +17,11 @@ def getIntersection(A,B,C,D):
                 }    
         
     return None
+
+def polysIntersect(poly1,poly2):
+    for i in range(len(poly1)):
+        for j in range(len(poly2)):
+            touch = getIntersection(poly1[i],poly1[(i + 1) % len(poly1)],poly2[j],poly2[(j + 1) % len(poly2)])
+            if touch:
+                return True
+    return False
