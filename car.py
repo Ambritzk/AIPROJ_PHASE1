@@ -1,6 +1,7 @@
 import pygame
 import math
 import utils
+from network import NeuralNetwork
 from sensor import Sensor
 
 class Car:
@@ -22,11 +23,12 @@ class Car:
         self.friction = 0.05
         self.angle = 0
 
+        self.useBrain = (controlType == "AI")
         self.change = 0 #for updating the environment wrt to the mc
 
-        if controlType == 'KEYS':
+        if controlType != 'DUMMY':
             self.sensor = Sensor(self)
-
+            self.brain = NeuralNetwork([self.sensor.raycount,6,4])
 
         self.damaged = False
         self.controlType = controlType
@@ -51,14 +53,24 @@ class Car:
             self.damaged = self.assessDamage(borders,traffic) 
         else:
             self.change = 0
-        if self.controlType == 'KEYS':
+
+        if self.controlType != 'DUMMY':
             self.sensor.Update(borders,traffic)
-        
+            offsets = [1 - reading[0]['offset'] if reading is not None else 0 for reading in self.sensor.readings]
+            
+            outputs = NeuralNetwork.feedForward(offsets,self.brain)
+            print(outputs)
+
+            if self.useBrain:
+                self.forward = outputs[0]
+                self.left = outputs[1]
+                self.right = outputs[2]
+                self.reverse = outputs[3]
 
 
     def Draw(self,screen):
         # screen.blit(self.rotated,self.finalcar.topleft)
-        color = "black" if self.controlType == 'KEYS' else "red"
+        color = "black" if self.controlType in ['KEYS','AI'] else "red"
         if self.damaged:
             color = "gray"
         pairs = [(p.get('x'),p.get('y')) for p in self.polygon]

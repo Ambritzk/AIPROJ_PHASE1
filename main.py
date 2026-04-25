@@ -26,7 +26,7 @@ lanes = road.RoadWithLanes(x=screen.get_width() / 2,width=rd.rec_width * 0.98)
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
 
-mc = car.Car(lanes.getLaneCenter(1),rd.rec_y + 500,30,50, "KEYS")
+mc = car.Car(lanes.getLaneCenter(1),rd.rec_y + 500,30,50, "AI")
 
 traffic = [car.Car(lanes.getLaneCenter(1),mc.y - 100,30,50,"DUMMY",mc,3)]
 screen.fill("purple")
