@@ -4,11 +4,12 @@ import utils
 from sensor import Sensor
 
 class Car:
-    def __init__(self,x,y,width,height):
+    def __init__(self,x,y,width,height, controlType, referenceToTheMainCar = None, maxspeed = 10):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+        self.tempy = self.y
 
         self.left = False
         self.right = False
@@ -17,17 +18,54 @@ class Car:
 
         self.speed = 0
         self.acceleration = 0.2
-        self.maxspeed = 3
+        self.maxspeed = maxspeed
         self.friction = 0.05
         self.angle = 0
         self.car_rect = pygame.Surface((self.width,self.height),pygame.SRCALPHA)
         self.car_rect.fill("white")
+        self.change = 0 #for updating the environment wrt to the mc
 
-        self.sensor = Sensor(self)
+        if controlType == 'KEYS':
+            self.sensor = Sensor(self)
 
 
         self.damaged = False
+        self.controlType = controlType
+        if self.controlType == "DUMMY":
+            self.forward = True
 
+
+        self.RefTomc: Car = referenceToTheMainCar
+
+
+    def Update(self,borders):
+        if self.controlType == 'KEYS':
+            self.HandleInput()
+        
+
+
+        if not self.damaged:
+            self.Move()
+            if self.controlType == 'DUMMY':
+                self.DummyControls()
+            self.polygon = self.CreatePolygon()
+            self.damaged = self.assessDamage(borders) 
+        else:
+            self.change = 0
+        if self.controlType == 'KEYS':
+            self.sensor.Update(borders)
+        
+
+
+    def Draw(self,screen):
+        # screen.blit(self.rotated,self.finalcar.topleft)
+        color = "black"
+        if self.damaged:
+            color = "gray"
+        pairs = [(p.get('x'),p.get('y')) for p in self.polygon]
+        pygame.draw.polygon(screen,color,pairs)
+        if self.controlType == 'KEYS':
+            self.sensor.Draw(screen)
 
     def CreatePolygon(self):
         points = []
@@ -51,29 +89,6 @@ class Car:
         
         return points
     
-
-
-    def Update(self,borders):
-        change = 0
-        if not self.damaged:
-            change = self.Move()
-            self.polygon = self.CreatePolygon()
-            self.damaged = self.assessDamage(borders)
-        self.sensor.Update(borders)
-        return change
-
-
-
-    def Draw(self,screen):
-        # screen.blit(self.rotated,self.finalcar.topleft)
-        color = "black"
-        if self.damaged:
-            color = "gray"
-        pairs = [(p.get('x'),p.get('y')) for p in self.polygon]
-        pygame.draw.polygon(screen,color,pairs)
-        self.sensor.Draw(screen)
-
-
     
     def HandleInput(self):
         keys = pygame.key.get_pressed()
@@ -143,11 +158,11 @@ class Car:
         rad = math.radians(self.angle)
         self.x -= math.sin(rad) * self.speed
 
-        old_y = self.y #for the dash illusion
-        self.y -= math.cos(rad) * self.speed
+        old_y = self.tempy #for the dash illusion
+        self.tempy -= math.cos(rad) * self.speed
 
 
-        return -(self.y - old_y)
+        self.change = -(self.tempy - old_y)
 
 
     def assessDamage(self,borders):
@@ -157,3 +172,23 @@ class Car:
         
         return False
     
+
+
+    def DummyControls(self):
+        mc = self.RefTomc
+
+
+        if abs(abs(self.y) - abs(mc.y)) > 2 * 720:
+            if self.y > mc.y:
+                self.y = -335
+            else:
+                self.y = 720 + 335
+
+
+        if self.change > mc.change:
+            self.y -= (self.change - mc.change)
+        else:
+            self.y += (mc.change - self.change)
+
+
+
