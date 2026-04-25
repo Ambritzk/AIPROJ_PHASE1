@@ -15,25 +15,20 @@ dt = 0
     
 
 
-def getRoad():
-    rec_width = screen.get_width() / 2
-    rec_height = screen.get_height()
-    rec_x = ( screen.get_width() - rec_width ) / 2
-    rec_y = 0
-    rec = pygame.Rect(rec_x,rec_y,rec_width,rec_height)
-    return rec
 
+
+#This is just displays the road
 rd = road.Road(screen)
 
 
-
+#This is for allocating lanes
 lanes = road.RoadWithLanes(x=screen.get_width() / 2,width=rd.rec_width * 0.98)
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
 
 mc = car.Car(lanes.getLaneCenter(1),rd.rec_y + 500,30,50, "KEYS")
 
-traffic = [car.Car(lanes.getLaneCenter(0),mc.y - 100,30,50,"DUMMY",mc,3)]
+traffic = [car.Car(lanes.getLaneCenter(1),mc.y - 100,30,50,"DUMMY",mc,3)]
 screen.fill("purple")
 while running:
     # poll for events
@@ -42,18 +37,17 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    # fill the screen with a color to wipe away anything from last frame
+
     
     for traff in traffic:
-        traff.Update(lanes.borders)
+        traff.Update(lanes.borders,[])
 
-    #pygame.draw.circle(screen, "red", player_pos, 40)
-    #mc.HandleInput()
-    mc.Update(lanes.borders)
+
+    mc.Update(lanes.borders,traffic)
     rd.Draw()
     lanes.draw(screen,mc.change)
 
-    #mc.y = screen.get_height() // 2  + (screen.get_height() // 4)
+
     for i in traffic:
         i.Draw(screen)
     mc.Draw(screen)

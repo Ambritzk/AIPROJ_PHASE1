@@ -21,8 +21,7 @@ class Car:
         self.maxspeed = maxspeed
         self.friction = 0.05
         self.angle = 0
-        self.car_rect = pygame.Surface((self.width,self.height),pygame.SRCALPHA)
-        self.car_rect.fill("white")
+
         self.change = 0 #for updating the environment wrt to the mc
 
         if controlType == 'KEYS':
@@ -35,10 +34,10 @@ class Car:
             self.forward = True
 
 
-        self.RefTomc: Car = referenceToTheMainCar
+        self.RefTomc: Car = referenceToTheMainCar #This is for the traffic cars to move according to the main car
 
 
-    def Update(self,borders):
+    def Update(self,borders,traffic):
         if self.controlType == 'KEYS':
             self.HandleInput()
         
@@ -49,17 +48,17 @@ class Car:
             if self.controlType == 'DUMMY':
                 self.DummyControls()
             self.polygon = self.CreatePolygon()
-            self.damaged = self.assessDamage(borders) 
+            self.damaged = self.assessDamage(borders,traffic) 
         else:
             self.change = 0
         if self.controlType == 'KEYS':
-            self.sensor.Update(borders)
+            self.sensor.Update(borders,traffic)
         
 
 
     def Draw(self,screen):
         # screen.blit(self.rotated,self.finalcar.topleft)
-        color = "black"
+        color = "black" if self.controlType == 'KEYS' else "red"
         if self.damaged:
             color = "gray"
         pairs = [(p.get('x'),p.get('y')) for p in self.polygon]
@@ -114,8 +113,7 @@ class Car:
 
 
 
-        self.rotated = pygame.transform.rotate(self.car_rect,self.angle)
-        self.finalcar = self.rotated.get_rect(center = (self.x,self.y))
+
     
 
 
@@ -165,9 +163,13 @@ class Car:
         self.change = -(self.tempy - old_y)
 
 
-    def assessDamage(self,borders):
+    def assessDamage(self,borders,traffic):
         for i in range(len(borders)):
             if utils.polysIntersect(self.polygon,borders[i]):
+                return True
+        
+        for i in range(len(traffic)):
+            if utils.polysIntersect(self.polygon,traffic[i].polygon):
                 return True
         
         return False

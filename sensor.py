@@ -11,13 +11,13 @@ class Sensor:
         self.rays = []
         self.readings = [] #for checking how far the borders are
     
-    def Update(self,borders):
+    def Update(self,borders,traffic):
         self.CastRays()
         self.readings = []
         for ray in self.rays:
-            self.readings.append(self.getReading(ray,borders))
+            self.readings.append(self.getReading(ray,borders,traffic))
 
-    def getReading(self,ray,borders):
+    def getReading(self,ray,borders,traffic):
         #refer to lecture 3
         #we check for all possible collisions and choose the one closest
         touches = []
@@ -25,8 +25,15 @@ class Sensor:
             touch = getIntersection(ray[0],ray[1],borders[i][0],borders[i][1])
             if touch:
                 touches.append(touch)
-        
 
+        #for traffic
+
+        for i in range(len(traffic)):
+            poly = traffic[i].polygon
+            for j in range(len(poly)):
+                value = getIntersection(ray[0],ray[1],poly[j],poly[(j + 1)%len(poly)])
+                if value:
+                    touches.append(value)
         if len(touches) == 0:
             return None
         else:
@@ -56,8 +63,7 @@ class Sensor:
                 tail = self.readings[i][0]
 
 
-            
+            pygame.draw.line(screen,"black",(self.rays[i][1]['x'],self.rays[i][1]['y']),(tail['x'],tail['y']),3)
             pygame.draw.line(screen,"yellow",(self.rays[i][0]['x'],self.rays[i][0]['y']),(tail['x'],tail['y']),3)
 
-
-            pygame.draw.line(screen,"black",(self.rays[i][1]['x'],self.rays[i][1]['y']),(tail['x'],tail['y']),3)
+            
